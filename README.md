@@ -16,7 +16,7 @@ The second window shows the first and second polygon along with the third as a r
   
     The second stage, creating transformation vectors for intersection points
   After optimization, the program looks for intersection points and creates transformation vectors according to the rules:
-1. A vector is created from the midpoint to the intersection point and normalized, if there is no midpoint, then the vector is created from a point that does not intersect with polygon 2 and has an index of +1 or -1. The midpoint between points with indexes +1 and -1 is created provided that these points intersect with polygon 2.
+1. A vector is created from the midpoint to the intersection point and normalized, if there is no midpoint, then the vector is created from a point that does not intersect with polygon 2 and has an index of +1 or -1. The midpoint between points with indexes +1 and -1 is created provided that these points intersect with second polygon.
 2. The vector is multiplied by -1 if the inner rings of the polygon are being edited.
 After calling the “InterPoints” function, the output is three sets of data: intersection points (not used in this program), transformation vectors, indexes of intersection points.
 
@@ -38,8 +38,8 @@ After the “SmartConvex” function, the area can change, so the corrected poly
   
     Второй этап, создание векторов трансформации для точек пересечения
   После оптимизации программа ищет точки пересечения и создает вектора трансформации по правилам: 
-1. Вектор создается от средней точки до точки пересечения и нормализуется, если средней точки нет, то вектор создается от точки, которая не пересекается с полигоном 2 и имеет индекс +1 или -1. Средняя точка между точками с индексами +1 и -1 создается при условии, что эти точки пересекаются с полигоном 2.
-2. Вектор умножается на -1 если редактируется внутренние кольца полигона.
+1) Вектор создается от средней точки до точки пересечения и нормализуется, если средней точки нет, то вектор создается от точки, которая не пересекается с полигоном 2 и имеет индекс +1 или -1. Средняя точка между точками с индексами +1 и -1 создается при условии, что эти точки пересекаются с полигоном 2.
+2) Вектор умножается на -1 если редактируется внутренние кольца полигона.
 После вызова функции “InterPoints” на выходе получается три набора данных: точки пересечения (в данной программе не используются), вектора трансформации, индексы точек пересечения.
 
     Третий этап, трансформация полигона и подгонка под нужную площадь

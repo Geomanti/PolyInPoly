@@ -1,5 +1,5 @@
 # PolyInPoly
-The python code to modify wkt polys. Extend a poly in another poly by give area
+The python code to modify wkt polys. Extend a poly in another poly by a given area
 
     Interface
   Two polygons are loaded into the lines "Polygon 1" and "Polygon 2", which are connected by several edges, or one polygon completely surrounds the second.

@@ -1,7 +1,6 @@
 # PolyInPoly
 The python code to modify wkt polys. Extend a poly in another poly by give area
 
-En:
     Interface
   Two polygons are loaded into the lines "Polygon 1" and "Polygon 2", which are connected by several edges, or one polygon completely surrounds the second.
 The “Area” line contains the area that needs to be added to polygon 1. The “Simplify” slider allows you to adjust the degree of model simplification, the larger the value, the more angular the polygon will be and the fewer points it will have. 
@@ -28,7 +27,6 @@ After the “SmartConvex” function, the area can change, so the corrected poly
     Fourth stage, data output and visualization
   The resulting set of points is converted into a polygon, the resulting area minus the original area is displayed, two polygons are written to a text file and saved in the selected folder. The new polygon is rendered as a canvas outline in the PySimpleGUI window along with the two original polygons.
 
-Rus:
     Интерфейс
   Загружается два полигона в строки “Polygon 1” и “Polygon 2”, которые соединяются несколькими ребрами или один полигон полностью окружает второй. В строку “Area” записывается площадь, которую нужно прибавить к полигону 1. Слайдер “Simplify” позволяет настроить степень упрощения модели, чем больше значение тем более угловатый будет полигон и тем меньше у него будет точек. Строка “Output” позволяет выбрать папку куда будут сохранены 2 полигона. Кнопка “Refresh” обновляет канвас с изображением фигур. Дальше идет два больших окна, первое окно пишет всё что делает программа и выводит преобразованный первый полигон в текстовом формате wkt. Второе окно показывает первый и второй полигон вместе с третьим в виде красного контура. Первое и второе окно вместе позволяют выбрать результат который устраивает пользователя.
   

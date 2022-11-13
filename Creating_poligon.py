@@ -31,7 +31,7 @@ layout = [
      ],
     [sg.Text('        Area'), sg.InputText()
      ],
-    [sg.Text('    Simplify'), sg.Slider(range=(1, 100), orientation='h', size=(35, 20), default_value=5, change_submits=True), sg.Button(button_text='Refresh')
+    [sg.Text('    Simplify'), sg.Slider(range=(0, 100), orientation='h', size=(35, 20), default_value=5, change_submits=True), sg.Button(button_text='Refresh')
      ],
     [sg.Text('     Output'), sg.InputText(), sg.FolderBrowse()
      ],
@@ -61,21 +61,34 @@ while True:  # The Event Loop
         print('Loading...')
         f1 = open(poly1Path, 'rt')
         f2 = open(poly2Path, 'rt')
+
         print('Opening polygons')
-        coords1 = F.Points_To_Polygon(f1.read())
+        coords1 = F.Seperate_Rings(F.Points_To_Polygon(f1.read()))
         coords2 = F.Points_To_Polygon(f2.read())
         coords3 = F.Extend_Poly_into_Poly2(coords1, coords2, value, fillholes, simplify)
+
         print('Creating new polygons')
-        polygon1 = Polygon(coords1)
-        if len(coords3) == 1:
+        try:
+            polygon1 = Polygon(coords1[0], coords1[1])
+        except:
+            polygon1 = Polygon(coords1[0])
+
+        if len(coords3[1]) == 0:
             polygon3 = Polygon(coords3[0])
         else:
-            polygon3 = Polygon(coords3)
+            polygon3 = Polygon(coords3[0], coords3[1])
+
         print('Reference polygon area: ' + str(polygon1.area))
         print('New polygon area: ' + str(polygon3.area))
         print('Added area: ' + str(polygon3.area - polygon1.area))
-        polygon2 = Polygon(coords2)
+
+        poly2coords = F.Seperate_Rings(coords2)
+        try:
+            polygon2 = Polygon(poly2coords[0], poly2coords[1])
+        except:
+            polygon2 = Polygon(poly2coords[0])
         print('Done')
+
         print('Created polygon: ' + str(polygon3.wkt))
         preview = F.Points_To_Polygon(polygon3.wkt)
 
@@ -99,11 +112,15 @@ while True:  # The Event Loop
         fig_agg.get_tk_widget().forget()
         plt.clf()
         F.Shape_To_View(coords1)
-        F.Shape_To_View(coords2)
-        F.Shape_To_View_Contour(polygon3)
+        F.Shape_To_View(poly2coords)
+        F.Shape_To_View_Contour(coords3[0])
+        try:
+            F.Shape_To_View_Contour_Interior(coords3[1])
+        except:
+            print('No interior to visualize')
         fig_agg = draw_figure(window['canvas'].TKCanvas, fig)
     except:
-        print('Something is wrong')
+        print('Input data is wrong')
 
     if event in (None, 'Exit', 'Cancel'):
         break

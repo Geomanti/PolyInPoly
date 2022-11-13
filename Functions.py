@@ -30,29 +30,31 @@ def Points_To_Polygon(text):
 		polygonlist.append(point)
 	return polygonlist
 
-# Creating coords for contour to visualize with matplotlib
+# Creating contour from coords to visualize with matplotlib
 
 
-def Shape_To_View_Contour(polygon):
+def Shape_To_View_Contour(polypoints):
 	x = []
 	y = []
-	rings = list()
-	exterior = list(polygon.exterior.coords)
-	rings.append(exterior)
 
-	try:
-		interior = list(polygon.interior.coords)
-		rings.append(interior)
-	except:print('No interior found')
+	for point in polypoints:
+		x.append(point[0])
+		y.append(point[1])
 
-	for element in rings:
+	plt.plot(x, y, 'r')
 
-		for point in element:
+# Creating interior contour from coords to visualize with matplotlib
+
+
+def Shape_To_View_Contour_Interior(interior):
+	x = []
+	y = []
+	for ring in interior:
+		for point in ring:
 			x.append(point[0])
 			y.append(point[1])
 
-		plt.plot(x, y, 'r')
-
+	plt.plot(x, y, 'r')
 # Creating coords for polygon to visualize with matplotlib
 
 
@@ -60,10 +62,17 @@ def Shape_To_View(pointlist):
 	x = []
 	y = []
 
-	for point in pointlist:
+	for point in pointlist[0]:
 		x.append(point[0])
 		y.append(point[1])
+	try:
+		for ring in pointlist[1]:
 
+			for point in ring:
+				x.append(point[0])
+				y.append(point[1])
+	except IndexError:
+		pass
 	plt.fill(x, y)
 
 # Funtion to find intersections with second poly and
@@ -265,7 +274,10 @@ def Scale_to_fit_space(pointlist, vectorlist, value):
 def Scale_Vec_to_Fit_Area(points, pointstransformed, vectorlist, refpoly, value):
 	polygonoptimized = g.Polygon(points)
 	polygontransformed = g.Polygon(pointstransformed).convex_hull
-	refpoly1 = g.Polygon(refpoly)
+	try:
+		refpoly1 = g.Polygon(refpoly[0], refpoly[1])
+	except IndexError:
+		refpoly1 = g.Polygon(refpoly[0])
 	scalar = ((refpoly1.area + value - polygonoptimized.area) /
 			(polygontransformed.area - polygonoptimized.area))
 	newvectorlist = list()
@@ -300,33 +312,28 @@ def Mid_Point(point1, point2):
 
 
 def Optimization(poly1, poly2, fillholes, simplify):
-	polygon1 = g.Polygon(poly1)
+	coordinates1 = list()
+	try:
+		polygon1 = g.Polygon(poly1[0], poly1[1])
+	except:
+		polygon1 = g.Polygon(poly1[0])
 	scale = simplify / 100
 	bufferparam = (polygon1.area / 100) * scale
-	coordinates1 = list()
+	coordinates1.append(poly1[0])
 
-	try:
-		exterior = list(polygon1.exterior.coords)
-		coordinates1.append(exterior)
-	except:
-		print('Failed to optimize exterior ring of first polygon')
-
-	try:
-
-		if fillholes:
+	if fillholes:
+		pass
+	else:
+		try:
+			for ring in poly1[1]:
+				coordinates1.append(ring)
+		except:
 			pass
-		else:
-			interior = list(polygon1.interior.coords)
-			coordinates1.append(interior)
-
-	except:
-		print('Failed to optimize interior ring of first polygon')
-
 	inter = 0
 	newpolycoords = list()
-	newring = list()
+	interior = list()
 	for rings in coordinates1:
-
+		newring = list()
 		for index1 in range(len(rings)):
 			intermin = 0
 			intermax = 0
@@ -335,7 +342,6 @@ def Optimization(poly1, poly2, fillholes, simplify):
 			pointsmin = list()
 			pointsmax = list()
 			skip = False
-
 			for index2 in range(len(poly2)):
 
 				if index1+1 < len(rings):
@@ -391,14 +397,17 @@ def Optimization(poly1, poly2, fillholes, simplify):
 					if linestring.contains(g.Point(rings[index1][0], rings[index1][1])):
 						skip = True
 
-			if skip:
+			if skip and (simplify != 0):
 				pass
 			else:
 				newring.append(list(rings[index1]))
-
-		newpolycoords.append(newring)
+		if inter == 0:
+			newpolycoords.append(newring)
+		else:
+			interior.append(newring)
 		inter = 1
 
+	newpolycoords.append(interior)
 	return newpolycoords
 
 # Convex Hull function to remove intersecting points
@@ -447,32 +456,95 @@ def smart_Convex(polypoints, intersectindexs, usefultrvectors, inter):
 # Function to assamble all the small functions
 
 
+def Seperate_Rings(polygon):
+	newpoly = list()
+	# Checking for interior
+	if (polygon[-1][0] == polygon[0][0]
+	and polygon[-1][1] == polygon[0][1]):
+		newpoly.append(polygon)
+		return newpoly
+	else:
+		assamblelist = list()
+		assamblelist.extend(polygon)
+		newpolylist = list()
+		ring = list()
+		index = 0
+		interior = list()
+
+		while len(assamblelist) != 0:
+
+			# Removing first point to use index properly
+			ring.append(assamblelist.pop(0))
+			index = assamblelist.index(ring[0])
+			ring.extend(assamblelist[:(index+1)])
+
+			if len(newpolylist) == 0:
+				newpolylist.append(ring)
+			else:
+				interior.append(ring)
+			ring = list()
+			assamblelist = assamblelist[(index+1):]
+
+		newpolylist.append(interior)
+		return newpolylist
+
+
+
+
+
+
+
 def Extend_Poly_into_Poly2(polypoints1, polypoints2, trvalue, fillholes, simplify):
+
 	print('Optimizing plygon')
 	optimizedpoly = Optimization(polypoints1, polypoints2, fillholes, simplify)
 	inter = 0
 	newpoly = list()
 	print('Finding intersections')
+	interior = list()
 
 	for element in optimizedpoly:
-		intersectpoints = Inter_Points(element, polypoints2, inter)
-		transformvectors = intersectpoints.pop()
-		intersectindexs = intersectpoints.pop()
 
-		# First transform and correction
-		transformedpoints = Points_X_Vectors(element, intersectindexs, transformvectors)
-		usefultrvectors = Scale_Vec_to_Fit_Area(element, transformedpoints, transformvectors, polypoints1, trvalue)
-		transformedpoints1 = Points_X_Vectors(element, intersectindexs, usefultrvectors)
-		removedinsidepoints = smart_Convex(transformedpoints1, intersectindexs, usefultrvectors, inter)
+		while True:
+			if inter != 0:
+				try:
+					ring = element[inter-1]
+				except IndexError:
+					break
+			else:
+				ring = element
 
-		# After smart Convex code removes some points, vectors and indexs
-		newinterindexs = removedinsidepoints.pop()
-		newvectors = removedinsidepoints.pop()
+			try:
+				intersectpoints = Inter_Points(ring, polypoints2, inter)
+				transformvectors = intersectpoints.pop()
+				intersectindexs = intersectpoints.pop()
 
-		# Second transform and correction after smart Convex
-		transformedpoints2 = Points_X_Vectors(removedinsidepoints, newinterindexs, newvectors)
-		newusefulvectors = Scale_Vec_to_Fit_Area(removedinsidepoints, transformedpoints2, newvectors, polypoints1, trvalue)
-		transformedpoints3 = Points_X_Vectors(removedinsidepoints, newinterindexs, newusefulvectors)
-		inter = 1
-		newpoly.append(transformedpoints3)
+				# First transform and correction
+				transformedpoints = Points_X_Vectors(ring, intersectindexs, transformvectors)
+				usefultrvectors = Scale_Vec_to_Fit_Area(ring, transformedpoints, transformvectors, polypoints1, trvalue)
+				transformedpoints1 = Points_X_Vectors(ring, intersectindexs, usefultrvectors)
+				removedinsidepoints = smart_Convex(transformedpoints1, intersectindexs, usefultrvectors, inter)
+
+				# After smart Convex code removes some points, vectors and indexs
+				newinterindexs = removedinsidepoints.pop()
+				newvectors = removedinsidepoints.pop()
+
+				# Second transform and correction after smart Convex
+				transformedpoints2 = Points_X_Vectors(removedinsidepoints, newinterindexs, newvectors)
+				newusefulvectors = Scale_Vec_to_Fit_Area(removedinsidepoints, transformedpoints2, newvectors, polypoints1, trvalue)
+				transformedpoints3 = Points_X_Vectors(removedinsidepoints, newinterindexs, newusefulvectors)
+
+				if inter == 0:
+					inter += 1
+					newpoly.append(transformedpoints3)
+					break
+				else:
+					interior.append(transformedpoints3)
+					inter += 1
+			except:
+				print('No polygon found')
+				break
+
+		newpoly.append(interior)
+
 	return newpoly

@@ -5,7 +5,7 @@ from shapely import geometry as g
 # Cleaning data before using
 
 
-def PointsToPolygon(text):
+def Points_To_Polygon(text):
 	temp1 = text.replace('(', '')
 	context = temp1.replace(')', '')
 	wordFree = context.replace('POLYGON', '')
@@ -33,7 +33,7 @@ def PointsToPolygon(text):
 # Creating coords for contour to visualize with matplotlib
 
 
-def ShapeToViewContour(polygon):
+def Shape_To_View_Contour(polygon):
 	x = []
 	y = []
 	rings = list()
@@ -56,7 +56,7 @@ def ShapeToViewContour(polygon):
 # Creating coords for polygon to visualize with matplotlib
 
 
-def ShapeToView(pointlist):
+def Shape_To_View(pointlist):
 	x = []
 	y = []
 
@@ -71,7 +71,7 @@ def ShapeToView(pointlist):
 # and also write intersection as index of poly 1
 
 
-def InterPoints(poly1, poly2, interior):
+def Inter_Points(poly1, poly2, interior):
 	polygon1 = g.Polygon(poly1)
 	movevector = list()
 	interlist = list()
@@ -132,7 +132,7 @@ def InterPoints(poly1, poly2, interior):
 			pmin = pointsmin[0]
 			pmax = pointsmax[0]
 			midpoint = list()
-			midpoint = MidPoint(pmin, pmax)
+			midpoint = Mid_Point(pmin, pmax)
 			checkpoint = g.Point(midpoint[0], midpoint[1])
 
 			# Creating transformation vector
@@ -202,7 +202,7 @@ def Vec2pt(point1, point2):
 # Function to transform poly1 points by indexs of intersection with poly2 by transform vectors
 
 
-def PointsXVectors(polygon, intersectindexs, vectorlist):
+def Points_X_Vectors(polygon, intersectindexs, vectorlist):
 	polypoint = list()
 	TransformedPoly = list()
 
@@ -228,7 +228,7 @@ def PointsXVectors(polygon, intersectindexs, vectorlist):
 # Function to extend list
 
 
-def AddPoints(pointlist1, pointlist2):
+def Add_Points(pointlist1, pointlist2):
 	newlist = list()
 	newlist.append(pointlist1[0])
 
@@ -243,7 +243,7 @@ def AddPoints(pointlist1, pointlist2):
 # Simple function to scale vectors to get desirable area
 
 
-def Scaletofitspace(pointlist, vectorlist, value):
+def Scale_to_fit_space(pointlist, vectorlist, value):
 	polygon = g.Polygon(pointlist)
 	scalar = value / polygon.area
 	newvectorlist = list()
@@ -262,7 +262,7 @@ def Scaletofitspace(pointlist, vectorlist, value):
 # Complex function to scale vectors to get desirable area
 
 
-def ScaleVtoFitA(points, pointstransformed, vectorlist, refpoly, value):
+def Scale_Vec_to_Fit_Area(points, pointstransformed, vectorlist, refpoly, value):
 	polygonoptimized = g.Polygon(points)
 	polygontransformed = g.Polygon(pointstransformed).convex_hull
 	refpoly1 = g.Polygon(refpoly)
@@ -284,7 +284,7 @@ def ScaleVtoFitA(points, pointstransformed, vectorlist, refpoly, value):
 # Function to find middle point between 2 points
 
 
-def MidPoint(point1, point2):
+def Mid_Point(point1, point2):
 	x1 = point1[0]
 	y1 = point1[1]
 	x2 = point2[0]
@@ -368,7 +368,7 @@ def Optimization(poly1, poly2, fillholes, simplify):
 					pmin = pointsmin[0]
 					pmax = pointsmax[0]
 					midpoint = list()
-					midpoint = MidPoint(pmin, pmax)
+					midpoint = Mid_Point(pmin, pmax)
 					vector = Vec2pt(rings[index1], midpoint)
 					x = vector[0] + rings[index1][0]
 					y = vector[1] + rings[index1][1]
@@ -404,7 +404,7 @@ def Optimization(poly1, poly2, fillholes, simplify):
 # Convex Hull function to remove intersecting points
 
 
-def smartConvex(polypoints, intersectindexs, usefultrvectors, inter):
+def smart_Convex(polypoints, intersectindexs, usefultrvectors, inter):
 	convexpoly = g.Polygon(polypoints).convex_hull.buffer(-10, join_style=2)
 	newpoly = list()
 	newindexs = list()
@@ -447,7 +447,7 @@ def smartConvex(polypoints, intersectindexs, usefultrvectors, inter):
 # Function to assamble all the small functions
 
 
-def ExtendPolyintoPoly2(polypoints1, polypoints2, trvalue, fillholes, simplify):
+def Extend_Poly_into_Poly2(polypoints1, polypoints2, trvalue, fillholes, simplify):
 	print('Optimizing plygon')
 	optimizedpoly = Optimization(polypoints1, polypoints2, fillholes, simplify)
 	inter = 0
@@ -455,24 +455,24 @@ def ExtendPolyintoPoly2(polypoints1, polypoints2, trvalue, fillholes, simplify):
 	print('Finding intersections')
 
 	for element in optimizedpoly:
-		intersectpoints = InterPoints(element, polypoints2, inter)
+		intersectpoints = Inter_Points(element, polypoints2, inter)
 		transformvectors = intersectpoints.pop()
 		intersectindexs = intersectpoints.pop()
 
 		# First transform and correction
-		transformedpoints = PointsXVectors(element, intersectindexs, transformvectors)
-		usefultrvectors = ScaleVtoFitA(element, transformedpoints, transformvectors, polypoints1, trvalue)
-		transformedpoints1 = PointsXVectors(element, intersectindexs, usefultrvectors)
-		removedinsidepoints = smartConvex(transformedpoints1, intersectindexs, usefultrvectors, inter)
+		transformedpoints = Points_X_Vectors(element, intersectindexs, transformvectors)
+		usefultrvectors = Scale_Vec_to_Fit_Area(element, transformedpoints, transformvectors, polypoints1, trvalue)
+		transformedpoints1 = Points_X_Vectors(element, intersectindexs, usefultrvectors)
+		removedinsidepoints = smart_Convex(transformedpoints1, intersectindexs, usefultrvectors, inter)
 
 		# After smart Convex code removes some points, vectors and indexs
 		newinterindexs = removedinsidepoints.pop()
 		newvectors = removedinsidepoints.pop()
 
 		# Second transform and correction after smart Convex
-		transformedpoints2 = PointsXVectors(removedinsidepoints, newinterindexs, newvectors)
-		newusefulvectors = ScaleVtoFitA(removedinsidepoints, transformedpoints2, newvectors, polypoints1, trvalue)
-		transformedpoints3 = PointsXVectors(removedinsidepoints, newinterindexs, newusefulvectors)
+		transformedpoints2 = Points_X_Vectors(removedinsidepoints, newinterindexs, newvectors)
+		newusefulvectors = Scale_Vec_to_Fit_Area(removedinsidepoints, transformedpoints2, newvectors, polypoints1, trvalue)
+		transformedpoints3 = Points_X_Vectors(removedinsidepoints, newinterindexs, newusefulvectors)
 		inter = 1
 		newpoly.append(transformedpoints3)
 	return newpoly

@@ -62,9 +62,9 @@ while True:  # The Event Loop
         f1 = open(poly1Path, 'rt')
         f2 = open(poly2Path, 'rt')
         print('Opening polygons')
-        coords1 = F.PointsToPolygon(f1.read())
-        coords2 = F.PointsToPolygon(f2.read())
-        coords3 = F.ExtendPolyintoPoly2(coords1, coords2, value, fillholes, simplify)
+        coords1 = F.Points_To_Polygon(f1.read())
+        coords2 = F.Points_To_Polygon(f2.read())
+        coords3 = F.Extend_Poly_into_Poly2(coords1, coords2, value, fillholes, simplify)
         print('Creating new polygons')
         polygon1 = Polygon(coords1)
         if len(coords3) == 1:
@@ -77,7 +77,7 @@ while True:  # The Event Loop
         polygon2 = Polygon(coords2)
         print('Done')
         print('Created polygon: ' + str(polygon3.wkt))
-        preview = F.PointsToPolygon(polygon3.wkt)
+        preview = F.Points_To_Polygon(polygon3.wkt)
 
         if event == 'Submit':
             print('Files has been created')
@@ -98,9 +98,9 @@ while True:  # The Event Loop
 
         fig_agg.get_tk_widget().forget()
         plt.clf()
-        F.ShapeToView(coords1)
-        F.ShapeToView(coords2)
-        F.ShapeToViewContour(polygon3)
+        F.Shape_To_View(coords1)
+        F.Shape_To_View(coords2)
+        F.Shape_To_View_Contour(polygon3)
         fig_agg = draw_figure(window['canvas'].TKCanvas, fig)
     except:
         print('Something is wrong')
